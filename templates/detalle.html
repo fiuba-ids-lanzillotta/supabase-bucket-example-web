@@ -9,7 +9,7 @@
     <div class="detalle__container">
         <div class="detalle__img-container">
             <img
-                src="{{ mascota.img_url }}"
+                src="{{ mascota.img_base64 }}"
                 alt="Foto de {{ mascota.nombre }}"
                 class="detalle__img"
                 onerror="this.src='{{ url_for('static', filename='img/placeholder.svg') }}'"
