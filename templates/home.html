@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Supabase Bucket Example - Inicio{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+    <div class="hero__content">
+        <h1 class="hero__title">Dale un hogar a quien mas lo necesita</h1>
+        <p class="hero__subtitle">Conoce a nuestras mascotas en adopcion y encuentra a tu nuevo mejor amigo</p>
+        <a href="#adopcion" class="hero__cta">Ver mascotas disponibles</a>
+    </div>
+</section>
+
+<!-- Carrousel de mascotas en adopcion -->
+<section id="adopcion" class="adopcion">
+    <h2 class="adopcion__title">Mascotas en adopcion</h2>
+
+    {% if mascotas %}
+    <div class="carousel">
+        <button class="carousel__btn carousel__btn--prev" id="btnPrev" aria-label="Anterior">&#10094;</button>
+
+        <div class="carousel__track-container">
+            <div class="carousel__track" id="carouselTrack">
+                {% for mascota in mascotas %}
+                <div class="carousel__slide">
+                    <div class="card">
+                        <div class="card__img-container">
+                            <img
+                                src="{{ mascota.img_url }}"
+                                alt="Foto de {{ mascota.nombre }}"
+                                class="card__img"
+                                onerror="this.src='{{ url_for('static', filename='img/placeholder.svg') }}'"
+                            >
+                            <span class="card__badge card__badge--{{ mascota.especie }}">{{ mascota.especie | capitalize }}</span>
+                        </div>
+                        <div class="card__body">
+                            <h3 class="card__name">{{ mascota.nombre }}</h3>
+                            <div class="card__details">
+                                <span class="card__detail">
+                                    <span class="card__detail-label">Raza:</span> {{ mascota.raza }}
+                                </span>
+                                <span class="card__detail">
+                                    <span class="card__detail-label">Edad:</span>
+                                    {% if mascota.edad_meses < 12 %}
+                                        {{ mascota.edad_meses }} mes{{ 'es' if mascota.edad_meses != 1 else '' }}
+                                    {% else %}
+                                        {{ (mascota.edad_meses // 12) }} ano{{ 's' if (mascota.edad_meses // 12) != 1 else '' }}
+                                        {% if mascota.edad_meses % 12 > 0 %}
+                                            y {{ mascota.edad_meses % 12 }} mes{{ 'es' if mascota.edad_meses % 12 != 1 else '' }}
+                                        {% endif %}
+                                    {% endif %}
+                                </span>
+                                <span class="card__detail">
+                                    <span class="card__detail-label">Sexo:</span> {{ mascota.sexo | capitalize }}
+                                </span>
+                            </div>
+                            <p class="card__desc">{{ mascota.descripcion | truncate(120) }}</p>
+                            <a href="{{ url_for('mascotas.detalle_mascota', id=mascota.id) }}" class="card__btn">Conocer mas</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <button class="carousel__btn carousel__btn--next" id="btnNext" aria-label="Siguiente">&#10095;</button>
+    </div>
+
+    <!-- Indicadores -->
+    <div class="carousel__dots" id="carouselDots"></div>
+
+    {% else %}
+    <div class="adopcion__empty">
+        <p>No hay mascotas disponibles para adopcion en este momento.</p>
+        <p>Vuelve pronto, siempre estamos rescatando nuevos amigos.</p>
+        <a href="{{ url_for('mascotas.nueva_mascota') }}" class="hero__cta" style="margin-top: 1.5rem;">Registrar una mascota</a>
+    </div>
+    {% endif %}
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const track = document.getElementById('carouselTrack');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const dotsContainer = document.getElementById('carouselDots');
+
+    if (!track) return;
+
+    const slides = Array.from(track.children);
+    const totalSlides = slides.length;
+
+    if (totalSlides === 0) return;
+
+    // Cantidad de cards visibles segun el ancho de pantalla
+    function getVisibleCount() {
+        if (window.innerWidth >= 1024) return 3;
+        if (window.innerWidth >= 768)  return 2;
+        return 1;
+    }
+
+    let visibleCount = getVisibleCount();
+    let currentIndex = 0;
+
+    function getMaxIndex() {
+        return Math.max(0, totalSlides - visibleCount);
+    }
+
+    function updateCarousel() {
+        const slideWidth = slides[0].getBoundingClientRect().width;
+        const gap = 24;
+        track.style.transform = `translateX(-${currentIndex * (slideWidth + gap)}px)`;
+        updateDots();
+        updateButtons();
+    }
+
+    function updateButtons() {
+        btnPrev.disabled = currentIndex <= 0;
+        btnNext.disabled = currentIndex >= getMaxIndex();
+        btnPrev.style.opacity = btnPrev.disabled ? '0.3' : '1';
+        btnNext.style.opacity = btnNext.disabled ? '0.3' : '1';
+    }
+
+    // Generar dots
+    function buildDots() {
+        dotsContainer.innerHTML = '';
+        const totalDots = getMaxIndex() + 1;
+        for (let i = 0; i < totalDots; i++) {
+            const dot = document.createElement('button');
+            dot.classList.add('carousel__dot');
+            dot.setAttribute('aria-label', 'Ir a grupo ' + (i + 1));
+            dot.addEventListener('click', function () {
+                currentIndex = i;
+                updateCarousel();
+            });
+            dotsContainer.appendChild(dot);
+        }
+    }
+
+    function updateDots() {
+        const dots = dotsContainer.querySelectorAll('.carousel__dot');
+        dots.forEach(function (dot, i) {
+            dot.classList.toggle('carousel__dot--active', i === currentIndex);
+        });
+    }
+
+    btnPrev.addEventListener('click', function () {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateCarousel();
+        }
+    });
+
+    btnNext.addEventListener('click', function () {
+        if (currentIndex < getMaxIndex()) {
+            currentIndex++;
+            updateCarousel();
+        }
+    });
+
+    // Auto-play cada 5 segundos
+    let autoPlay = setInterval(function () {
+        if (currentIndex >= getMaxIndex()) {
+            currentIndex = 0;
+        } else {
+            currentIndex++;
+        }
+        updateCarousel();
+    }, 5000);
+
+    // Pausar auto-play al hacer hover
+    track.parentElement.addEventListener('mouseenter', function () {
+        clearInterval(autoPlay);
+    });
+
+    track.parentElement.addEventListener('mouseleave', function () {
+        autoPlay = setInterval(function () {
+            if (currentIndex >= getMaxIndex()) {
+                currentIndex = 0;
+            } else {
+                currentIndex++;
+            }
+            updateCarousel();
+        }, 5000);
+    });
+
+    // Responsive
+    window.addEventListener('resize', function () {
+        visibleCount = getVisibleCount();
+        if (currentIndex > getMaxIndex()) {
+            currentIndex = getMaxIndex();
+        }
+        buildDots();
+        updateCarousel();
+    });
+
+    buildDots();
+    updateCarousel();
+});
+</script>
+{% endblock %}

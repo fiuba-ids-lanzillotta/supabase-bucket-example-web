@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar mascota - Supabase Bucket Example{% endblock %}
+
+{% block content %}
+
+<section class="form-section">
+    <div class="form-container">
+        <h1 class="form-container__title">Registrar nueva mascota</h1>
+        <p class="form-container__subtitle">Completa los datos para agregar una mascota al refugio</p>
+
+        {% if errores %}
+        <div class="alert alert--error">
+            <ul class="alert__list">
+                {% for error in errores %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="form" novalidate>
+
+            <div class="form__group">
+                <label for="nombre" class="form__label">Nombre</label>
+                <input
+                    type="text"
+                    id="nombre"
+                    name="nombre"
+                    class="form__input"
+                    placeholder="Nombre de la mascota"
+                    value="{{ form.nombre if form else '' }}"
+                    required
+                >
+            </div>
+
+            <div class="form__row">
+                <div class="form__group">
+                    <label for="especie" class="form__label">Especie</label>
+                    <select id="especie" name="especie" class="form__select" required>
+                        <option value="">Seleccionar especie</option>
+                        {% for esp in especies %}
+                        <option value="{{ esp }}" {{ 'selected' if form and form.especie == esp else '' }}>{{ esp | capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form__group">
+                    <label for="raza" class="form__label">Raza</label>
+                    <input
+                        type="text"
+                        id="raza"
+                        name="raza"
+                        class="form__input"
+                        placeholder="Raza de la mascota"
+                        value="{{ form.raza if form else '' }}"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form__row">
+                <div class="form__group">
+                    <label for="edad_meses" class="form__label">Edad (meses)</label>
+                    <input
+                        type="number"
+                        id="edad_meses"
+                        name="edad_meses"
+                        class="form__input"
+                        placeholder="Ej: 12"
+                        min="0"
+                        value="{{ form.edad_meses if form else '' }}"
+                        required
+                    >
+                </div>
+                <div class="form__group">
+                    <label for="sexo" class="form__label">Sexo</label>
+                    <select id="sexo" name="sexo" class="form__select" required>
+                        <option value="">Seleccionar sexo</option>
+                        {% for s in sexos %}
+                        <option value="{{ s }}" {{ 'selected' if form and form.sexo == s else '' }}>{{ s | capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form__group">
+                <label for="descripcion" class="form__label">Descripcion</label>
+                <textarea
+                    id="descripcion"
+                    name="descripcion"
+                    class="form__textarea"
+                    placeholder="Describe a la mascota: personalidad, historia, necesidades especiales..."
+                    rows="4"
+                    required
+                >{{ form.descripcion if form else '' }}</textarea>
+            </div>
+
+            <div class="form__group">
+                <label for="fecha_ingreso" class="form__label">Fecha de ingreso</label>
+                <input
+                    type="date"
+                    id="fecha_ingreso"
+                    name="fecha_ingreso"
+                    class="form__input"
+                    value="{{ form.fecha_ingreso if form else '' }}"
+                    required
+                >
+            </div>
+
+            <div class="form__group">
+                <label for="imagen" class="form__label">Foto de la mascota</label>
+                <div class="form__file-wrapper">
+                    <input
+                        type="file"
+                        id="imagen"
+                        name="imagen"
+                        class="form__file"
+                        accept="image/png, image/jpeg, image/gif, image/webp"
+                        required
+                    >
+                    <div class="form__file-preview" id="imagePreview">
+                        <span class="form__file-placeholder">Hace clic o arrastra una imagen aqui</span>
+                        <img id="previewImg" src="" alt="Vista previa" style="display:none;">
+                    </div>
+                </div>
+                <small class="form__help">Formatos: PNG, JPG, GIF, WEBP. Maximo 5 MB.</small>
+            </div>
+
+            <div class="form__actions">
+                <a href="{{ url_for('mascotas.index') }}" class="form__btn form__btn--cancel">Cancelar</a>
+                <button type="submit" class="form__btn form__btn--submit">Registrar mascota</button>
+            </div>
+
+        </form>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const fileInput = document.getElementById('imagen');
+    const previewContainer = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const placeholder = previewContainer.querySelector('.form__file-placeholder');
+
+    // Click en el area de preview abre el selector de archivos
+    previewContainer.addEventListener('click', function () {
+        fileInput.click();
+    });
+
+    // Drag & drop
+    previewContainer.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        previewContainer.classList.add('form__file-preview--dragover');
+    });
+
+    previewContainer.addEventListener('dragleave', function () {
+        previewContainer.classList.remove('form__file-preview--dragover');
+    });
+
+    previewContainer.addEventListener('drop', function (e) {
+        e.preventDefault();
+        previewContainer.classList.remove('form__file-preview--dragover');
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            showPreview(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', function () {
+        if (fileInput.files.length) {
+            showPreview(fileInput.files[0]);
+        }
+    });
+
+    function showPreview(file) {
+        if (!file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            previewImg.src = e.target.result;
+            previewImg.style.display = 'block';
+            placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

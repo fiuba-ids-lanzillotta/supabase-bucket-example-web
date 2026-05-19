@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}{{ mascota.nombre if mascota else 'No encontrada' }} - Supabase Bucket Example{% endblock %}
+
+{% block content %}
+
+<section class="detalle">
+    {% if mascota %}
+    <div class="detalle__container">
+        <div class="detalle__img-container">
+            <img
+                src="{{ mascota.img_url }}"
+                alt="Foto de {{ mascota.nombre }}"
+                class="detalle__img"
+                onerror="this.src='{{ url_for('static', filename='img/placeholder.svg') }}'"
+            >
+        </div>
+        <div class="detalle__info">
+            <h1 class="detalle__name">{{ mascota.nombre }}</h1>
+            <span class="card__badge card__badge--{{ mascota.especie }}">{{ mascota.especie | capitalize }}</span>
+
+            <div class="detalle__datos">
+                <div class="detalle__dato">
+                    <span class="detalle__dato-label">Raza</span>
+                    <span class="detalle__dato-value">{{ mascota.raza }}</span>
+                </div>
+                <div class="detalle__dato">
+                    <span class="detalle__dato-label">Edad</span>
+                    <span class="detalle__dato-value">
+                        {% if mascota.edad_meses < 12 %}
+                            {{ mascota.edad_meses }} mes{{ 'es' if mascota.edad_meses != 1 else '' }}
+                        {% else %}
+                            {{ (mascota.edad_meses // 12) }} ano{{ 's' if (mascota.edad_meses // 12) != 1 else '' }}
+                            {% if mascota.edad_meses % 12 > 0 %}
+                                y {{ mascota.edad_meses % 12 }} mes{{ 'es' if mascota.edad_meses % 12 != 1 else '' }}
+                            {% endif %}
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detalle__dato">
+                    <span class="detalle__dato-label">Sexo</span>
+                    <span class="detalle__dato-value">{{ mascota.sexo | capitalize }}</span>
+                </div>
+                <div class="detalle__dato">
+                    <span class="detalle__dato-label">Estado</span>
+                    <span class="detalle__dato-value detalle__dato-value--{{ mascota.estado }}">{{ mascota.estado | capitalize }}</span>
+                </div>
+                <div class="detalle__dato">
+                    <span class="detalle__dato-label">Fecha de ingreso</span>
+                    <span class="detalle__dato-value">{{ mascota.fecha_ingreso }}</span>
+                </div>
+            </div>
+
+            <div class="detalle__descripcion">
+                <h3>Sobre {{ mascota.nombre }}</h3>
+                <p>{{ mascota.descripcion }}</p>
+            </div>
+
+            <a href="{{ url_for('mascotas.index') }}" class="detalle__back">&#8592; Volver al listado</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="adopcion__empty">
+        <h2>Mascota no encontrada</h2>
+        <p>La mascota que buscas no existe o ya no esta disponible.</p>
+        <a href="{{ url_for('mascotas.index') }}" class="detalle__back">&#8592; Volver al inicio</a>
+    </div>
+    {% endif %}
+</section>
+
+{% endblock %}

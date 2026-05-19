@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Supabase Bucket Example{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <header class="header">
+        <nav class="nav">
+            <a href="{{ url_for('mascotas.index') }}" class="nav__logo">
+                <span class="nav__logo-icon">&#128062;</span>
+                Supabase Bucket Example
+            </a>
+            <ul class="nav__links">
+                <li><a href="{{ url_for('mascotas.index') }}" class="nav__link">Inicio</a></li>
+                <li><a href="{{ url_for('mascotas.index') }}#adopcion" class="nav__link">Adoptar</a></li>
+                <li><a href="{{ url_for('mascotas.nueva_mascota') }}" class="nav__link nav__link--cta">Registrar mascota</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 Supabase Bucket Example &mdash; Proyecto de ejemplo</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>
